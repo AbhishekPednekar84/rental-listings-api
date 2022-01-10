@@ -1,21 +1,23 @@
 import io
-import secrets
 import os
-
-from uuid import UUID
-from . import router
-from . import get_db
-from sqlalchemy.orm import Session
-from database.models import Listing
-from fastapi import status
-from fastapi import HTTPException
-from fastapi import Depends
-from pydantic import BaseModel
-from typing import Optional
+import secrets
 from typing import List
-from helpers.imagekit_init import initialize_imagekit
+from typing import Optional
+from uuid import UUID
+
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
 from PIL import Image
 from PIL import UnidentifiedImageError
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from . import get_db
+from . import router
+from database.models import Listing
+from helpers.imagekit_init import initialize_imagekit
+
 
 class ListingBase(BaseModel):
     title: str
@@ -44,6 +46,7 @@ def get_all_listings(db: Session):
 def get_listing(listing_id: UUID, db: Session):
     return db.query(Listing).filter(Listing.id == listing_id).first()
 
+
 def create_new_listing(listing: ListingBase, db: Session):
     new_listing = Listing(
         title=listing.title,
@@ -59,13 +62,14 @@ def create_new_listing(listing: ListingBase, db: Session):
         brokers_excuse=listing.brokers_excuse,
         available_from=listing.available_from,
         user_id=str(listing.user_id),
-        apartment_id=str(listing.apartment_id)
+        apartment_id=str(listing.apartment_id),
     )
 
     db.add(new_listing)
     db.commit()
 
     return new_listing.id
+
 
 def upload_image_to_imagekit(listing_id: str, images: List):
     imagekit = initialize_imagekit()
@@ -106,7 +110,9 @@ def upload_image_to_imagekit(listing_id: str, images: List):
             )
 
 
-@router.get("/listings", response_model=List[ListingBase], status_code=status.HTTP_200_OK)
+@router.get(
+    "/listings", response_model=List[ListingBase], status_code=status.HTTP_200_OK
+)
 def get_listings(db: Session = Depends(get_db)):
     """
     Return all the listings in the database
@@ -117,20 +123,25 @@ def get_listings(db: Session = Depends(get_db)):
 
     Returns
     -------
-    List : the list is based on the ListingBase model 
+    List : the list is based on the ListingBase model
 
     Raises
     ------
     HTTPException
-        
+
     """
     try:
         return get_all_listings(db)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not fetch listings")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not fetch listings",
+        )
 
 
-@router.get("/listings/{listing_id}", response_model=ListingBase, status_code=status.HTTP_200_OK)
+@router.get(
+    "/listings/{listing_id}", response_model=ListingBase, status_code=status.HTTP_200_OK
+)
 def get_single_listing(listing_id: UUID, db: Session = Depends(get_db)):
     """
     Returns a single listing
@@ -141,27 +152,31 @@ def get_single_listing(listing_id: UUID, db: Session = Depends(get_db)):
 
     Returns
     -------
-    Data based on the ListingBase model 
+    Data based on the ListingBase model
 
     Raises
     ------
     HTTPException
-        
+
     """
     try:
         return get_listing(listing_id, db)
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not fetch the listing")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not fetch the listing",
+        )
 
 
 @router.post("/listings", status_code=status.HTTP_201_CREATED)
 def create_listing(listing: ListingBase, db: Session = Depends(get_db)):
     try:
         listing_id = create_new_listing(listing, db)
-
         if listing_id:
-            upload_image_to_imagekit(listing_id, images)
+            upload_image_to_imagekit(listing_id, images=[])
 
     except Exception:
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not create listing")
-    
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not create listing",
+        )

@@ -1,14 +1,16 @@
 import uuid
 from datetime import date
 
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean
 from sqlalchemy import Column
-from sqlalchemy import String
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
-from sqlalchemy import Boolean
+from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+
 from database.db import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -22,6 +24,7 @@ class User(Base):
 
     def __repr__(self) -> str:
         return f"User({self.email})"
+
 
 class Apartment(Base):
     __tablename__ = "apartments"
@@ -37,9 +40,10 @@ class Apartment(Base):
     def __repr__(self) -> str:
         return f"Apartment({self.name})"
 
+
 class Listing(Base):
     __tablename__ = "listings"
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String(200), nullable=False)
     listing_type = Column(String(10), nullable=False)
