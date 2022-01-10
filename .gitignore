@@ -153,4 +153,7 @@ docs/
 pyproject.toml
 .flake8
 
+$ isort
+.isort.cfg
+
 # End of https://www.toptal.com/developers/gitignore/api/python
