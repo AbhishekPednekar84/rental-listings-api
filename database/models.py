@@ -5,9 +5,11 @@ from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
 from sqlalchemy import ForeignKey
+from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.sqltypes import DateTime
 
 from database.db import Base
 
@@ -20,6 +22,8 @@ class User(Base):
     email = Column(String(50), nullable=False, unique=True)
     password = Column(String(200), nullable=False)
     otp = Column(String(6))
+    otp_generation_timestamp = Column(DateTime)
+    is_active = Column(Boolean, default=True)
     date_created = Column(Date, default=date.today)
 
     def __repr__(self) -> str:
@@ -50,12 +54,13 @@ class Listing(Base):
     total_area = Column(String(10))
     description = Column(String(500), nullable=False)
     mobile_number = Column(String(15), nullable=False)
-    bedrooms = Column(String(3), nullable=False)
-    bathrooms = Column(String(3))
-    floors = Column(String(3))
+    bedrooms = Column(Integer, nullable=False)
+    bathrooms = Column(Integer)
+    floors = Column(Integer)
     whatsapp_number = Column(Boolean)
     parking_available = Column(Boolean)
     brokers_excuse = Column(Boolean)
+    pets_allowed = Column(Boolean)
     available_from = Column(String(10))
     user_id = Column(UUID, ForeignKey("users.id"))
     apartment_id = Column(UUID, ForeignKey("apartments.id"))
@@ -68,13 +73,17 @@ class Listing(Base):
         return f"Listing({self.title})"
 
 
-class LisingImage(Base):
+class ListingImage(Base):
 
     __tablename__ = "listingimages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     listing_id = Column(UUID, ForeignKey("listings.id"))
+    imagekit_file_id = Column(String(100))
     image_path = Column(String(200), nullable=False)
+    height = Column(Integer)
+    width = Column(Integer)
+    thumbnail_url = Column(String(200))
 
     listing = relationship("Listing")
 
