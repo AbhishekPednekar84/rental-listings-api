@@ -2,6 +2,7 @@ from typing import List
 from typing import Optional
 from uuid import UUID
 
+from fastapi import Header
 from fastapi import HTTPException
 from fastapi import status
 from fastapi.param_functions import Depends
@@ -17,6 +18,7 @@ from database.models import Apartment
 from database.models import Listing
 from database.models import ListingImage
 from database.models import User
+from helpers.token_verification import verify_id_from_token
 from routers.listings import delete_selected_listing
 
 
@@ -168,9 +170,18 @@ def register_user(user: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.get("/user/{user_id}", response_model=UserBase, status_code=status.HTTP_200_OK)
-def get_individual_user(user_id: UUID, db: Session = Depends(get_db)):
+def get_individual_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
+):
+
+    # Return None here since this call is happening serverside
+    if not verify_id_from_token(authorization, db):
+        return None
+
     try:
-        return fetch_user_from_id(user_id, db)
+        return fetch_user_from_id(user_id, db) or None
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Could not fetch user"
@@ -178,7 +189,16 @@ def get_individual_user(user_id: UUID, db: Session = Depends(get_db)):
 
 
 @router.put("/user/update", status_code=status.HTTP_201_CREATED)
-def update_user_profile(user: UserUpdate, db: Session = Depends(get_db)):
+def update_user_profile(
+    user: UserUpdate,
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
+):
+    if not verify_id_from_token(authorization, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+
     try:
         return update_user_information(user.id, user.name, db)
 
@@ -202,6 +222,9 @@ def get_user_listings(user_id: str, db: Session = Depends(get_db)):
         listing_obj = {}
 
         listings = get_listings_for_a_user(user_id, db)
+
+        if not listings:
+            return []
 
         for listing in listings:
 

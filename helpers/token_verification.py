@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 
 from jose import jwt
+from jose.exceptions import ExpiredSignatureError
 from sqlalchemy.orm import Session
 
 from database.models import User
@@ -24,7 +25,7 @@ def generate_id_from_token(token: str, user_id: str):
 
     try:
         decoded_token = decode_token(token)
-    except Exception:
+    except ExpiredSignatureError:
         return False
 
     has_token_expired = datetime.utcnow() > datetime.fromtimestamp(decoded_token["exp"])
@@ -35,14 +36,14 @@ def generate_id_from_token(token: str, user_id: str):
 def verify_id_from_token(token: str, db: Session):
     try:
         decoded_token = decode_token(token)
-    except Exception:
+    except ExpiredSignatureError:
         return False
 
     has_token_expired = datetime.utcnow() > datetime.fromtimestamp(decoded_token["exp"])
 
-    saved_id = db.query(User).filter(User.id == decoded_token["sub"]).first()
-
-    if not saved_id:
+    if has_token_expired:
         return False
 
-    return saved_id and not has_token_expired
+    saved_id = db.query(User).filter(User.id == decoded_token["sub"]).first()
+
+    return bool(saved_id)

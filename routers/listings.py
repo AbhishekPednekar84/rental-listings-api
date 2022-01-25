@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import Depends
 from fastapi import Form
+from fastapi import Header
 from fastapi import HTTPException
 from fastapi import status
 from fastapi import UploadFile
@@ -23,6 +24,7 @@ from database.models import Listing
 from database.models import ListingImage
 from database.models import User
 from helpers.imagekit_init import initialize_imagekit
+from helpers.token_verification import verify_id_from_token
 
 
 class ListingBase(BaseModel):
@@ -387,7 +389,13 @@ def create_listing(
     apartment_id: UUID = Form(...),
     images: Optional[List[UploadFile]] = Form([]),
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
 ):
+    if not verify_id_from_token(authorization, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+
     try:
         new_listing = Listing(
             title=title,
@@ -440,7 +448,13 @@ def update_listing(
     available_from: str = Form(...),
     images: Optional[List[UploadFile]] = Form([]),
     db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
 ):
+    if not verify_id_from_token(authorization, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+
     try:
         db.query(Listing).filter(Listing.id == listing_id).update(
             {
@@ -475,7 +489,16 @@ def update_listing(
 
 
 @router.delete("/listing/{listing_id}", status_code=status.HTTP_201_CREATED)
-def delete_listing(listing_id: str, db: Session = Depends(get_db)):
+def delete_listing(
+    listing_id: str,
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
+):
+    if not verify_id_from_token(authorization, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+
     try:
         delete_selected_listing(listing_id, db)
 
@@ -594,7 +617,16 @@ def filter_listings_for_apartment(
 
 
 @router.delete("/image/{file_id}", status_code=status.HTTP_201_CREATED)
-def remove_image_from_imagekit(file_id: str, db: Session = Depends(get_db)):
+def remove_image_from_imagekit(
+    file_id: str,
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None),
+):
+    if not verify_id_from_token(authorization, db):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        )
+
     imagekit = initialize_imagekit()
 
     delete_image = imagekit.delete_file(file_id)
