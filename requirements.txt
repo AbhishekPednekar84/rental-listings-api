@@ -8,6 +8,7 @@ charset-normalizer==2.0.10
 click==8.0.3
 colorama==0.4.4
 distlib==0.3.4
+ecdsa==0.17.0
 fastapi==0.70.1
 filelock==3.4.2
 flake8==4.0.1
@@ -30,12 +31,16 @@ Pillow==9.0.0
 platformdirs==2.4.1
 pre-commit==2.16.0
 psycopg2==2.9.3
+pyasn1==0.4.8
 pycodestyle==2.8.0
 pydantic==1.9.0
 pyflakes==2.4.0
 python-dotenv==0.19.2
+python-jose==3.3.0
+python-multipart==0.0.5
 PyYAML==6.0
 requests==2.27.1
+rsa==4.8
 six==1.16.0
 sniffio==1.2.0
 SQLAlchemy==1.4.29
