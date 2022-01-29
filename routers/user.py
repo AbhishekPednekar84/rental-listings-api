@@ -145,13 +145,15 @@ def delete_selected_user(user_id: str, db: Session):
 
 @router.post("/user", status_code=status.HTTP_201_CREATED)
 def register_user(user: UserRegister, db: Session = Depends(get_db)):
-    try:
-        record = check_for_existing_email(user.email, db)
-        if record:
-            return {
-                "message": f"{user.email} already exists. Please pick a different email address."
-            }
 
+    record = check_for_existing_email(user.email, db)
+    if record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"An user for {user.email} already exists. Please register with a different email address.",
+        )
+
+    try:
         record = create_new_user(user, db)
         token = create_access_token(data={"sub": str(record.id)})
 
