@@ -246,10 +246,9 @@ def get_user_listings(user_id: str, db: Session = Depends(get_db)):
                 image_obj["image_thumbnail"] = image[1]
                 image_obj["height"] = image[2]
                 image_obj["width"] = image[3]
-
                 image_list.append(image_obj.copy())
-
                 listing_obj["images"] = image_list
+                image_list = []
 
             listings_list.append(listing_obj.copy())
 
