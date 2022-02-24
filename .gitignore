@@ -156,4 +156,6 @@ pyproject.toml
 $ isort
 .isort.cfg
 
+test.http
+
 # End of https://www.toptal.com/developers/gitignore/api/python

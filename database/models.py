@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Date
+from sqlalchemy import Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -51,8 +52,8 @@ class Listing(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     title = Column(String(200), nullable=False)
     listing_type = Column(String(10), nullable=False)
-    total_area = Column(String(10))
-    description = Column(String(500), nullable=False)
+    total_area = Column(Float)
+    description = Column(String(500))
     mobile_number = Column(String(15), nullable=False)
     bedrooms = Column(Integer, nullable=False)
     bathrooms = Column(Integer)
@@ -65,6 +66,20 @@ class Listing(Base):
     user_id = Column(UUID, ForeignKey("users.id"))
     apartment_id = Column(UUID, ForeignKey("apartments.id"))
     date_created = Column(Date, default=date.today)
+    rent_amount = Column(Float)
+    maintenance_amount = Column(Float)
+    deposit_amount = Column(Float)
+    sale_amount = Column(Float)
+    sale_amount_value = Column(String(50), default="Lakhs")
+    maintenance_included_in_rent = Column(Boolean)
+    rent_amount_negotiable = Column(Boolean)
+    sale_amount_negotiable = Column(Boolean)
+    facing_direction = Column(String(50))
+    non_vegetarians = Column(Boolean)
+    tenant_preference = Column(String(250))
+    total_floors = Column(Integer)
+    prefers_call = Column(Boolean)
+    prefers_text = Column(Boolean)
 
     user = relationship("User")
     apartment = relationship("Apartment")
