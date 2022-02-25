@@ -249,7 +249,7 @@ def generate_otp(id: str, db: Session = Depends(get_db)):
         otp = secrets.token_hex(3).upper()
 
         fp_generate_otp(id, otp, db)
-        return {"message": "Otp generated"}
+        return {"message": "Otp generated", "token": otp}
     except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
