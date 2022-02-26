@@ -313,7 +313,7 @@ def date_formatter(date_created):
     elif days == 1:
         return "yesterday"
     elif days > 1 and days <= 30:
-        return f"{days} ago"
+        return f"{days}d ago"
     elif days > 30:
         return "over a month ago"
     elif days > 365:
