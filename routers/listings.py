@@ -632,8 +632,6 @@ def get_all_listings_for_apartment(apartment: str, db: Session = Depends(get_db)
 
         # images = get_listing_images(record.id, db)
 
-        # print(images)
-
         for record in records:
             image_list = get_listing_images(record.id, db)
 

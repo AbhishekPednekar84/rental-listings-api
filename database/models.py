@@ -8,6 +8,7 @@ from sqlalchemy import Float
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import DateTime
@@ -36,11 +37,12 @@ class Apartment(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
-    address1 = Column(String(150), nullable=False)
+    address1 = Column(String(150))
     address2 = Column(String(150))
     city = Column(String(50))
     state = Column(String(50))
-    pincode = Column(String(50))
+    pincode = Column(String(50), nullable=False)
+    name_token = Column(TSVECTOR)
 
     def __repr__(self) -> str:
         return f"Apartment({self.name})"
