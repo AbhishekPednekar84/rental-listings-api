@@ -30,6 +30,7 @@ from database.models import ListingImage
 from database.models import User
 from helpers.imagekit_init import initialize_imagekit
 from helpers.token_verification import verify_id_from_token
+from helpers.uuid_validator import uuid_validator
 
 
 class ListingBase(BaseModel):
@@ -54,13 +55,6 @@ class ListingBase(BaseModel):
 
     class Config:
         orm_mode = True
-
-
-def uuid_validator(id: str):
-    try:
-        return bool(UUID(id))
-    except ValueError:
-        return False
 
 
 def get_all_listings(db: Session):

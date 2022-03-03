@@ -1,8 +1,12 @@
+import json
+import os
+import sys
 from typing import List
 from typing import Optional
 from uuid import UUID
 
 import requests
+from fastapi import BackgroundTasks
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
@@ -56,6 +60,34 @@ def get_specific_apartment(apartment: str, db: Session):
 
 def get_specific_apartment_from_id(apartment_id: str, db: Session):
     return db.query(Apartment).filter(Apartment.id == apartment_id).first()
+
+
+def send_slack_message(apartment_name, pincode, city):
+    url = os.getenv("SLACK_WEBHOOK_URL")
+    message = f"The apartment {apartment_name.upper()} located in {city} ({pincode}) was just added"
+    title = "New Apartment Added :zap:"
+    slack_data = {
+        "username": "ROSNotificationBot",
+        "icon_emoji": ":satellite:",
+        "attachments": [
+            {
+                "color": "#0D9488",
+                "fields": [
+                    {
+                        "title": title,
+                        "value": message,
+                        "short": "false",
+                    }
+                ],
+                "image_url": os.getenv("SLACK_ROS_IMAGE_URL"),
+            }
+        ],
+    }
+    byte_length = str(sys.getsizeof(slack_data))
+    headers = {"Content-Type": "application/json", "Content-Length": byte_length}
+    response = requests.post(url, data=json.dumps(slack_data), headers=headers)
+    if response.status_code != 200:
+        raise Exception(response.status_code, response.text)
 
 
 @router.get(
@@ -147,7 +179,11 @@ async def get_apartment_from_id(apartment_id: str, db: Session = Depends(get_db)
 
 
 @router.post("/apartment", status_code=status.HTTP_201_CREATED)
-def create_new_apartment(apartment: ApartmentCreate, db: Session = Depends(get_db)):
+def create_new_apartment(
+    apartment: ApartmentCreate,
+    background_task: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     try:
         res = requests.get(
             f"https://api.postalpincode.in/pincode/{apartment.pincode}"
@@ -172,6 +208,10 @@ def create_new_apartment(apartment: ApartmentCreate, db: Session = Depends(get_d
         )
 
         db.commit()
+
+        background_task.add_task(
+            send_slack_message, apartment.name, apartment.pincode, city
+        )
 
         return {"id": new_apartment.id, "name": new_apartment.name}
     except Exception:

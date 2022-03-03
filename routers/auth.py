@@ -132,7 +132,7 @@ def get_current_user(
         raise credentials_exception
 
     user = (
-        db.query(User.id, User.name, User.email, User.is_active)
+        db.query(User.id, User.name, User.email, User.is_active, User.verify_user)
         .filter(and_(User.id == token_data.id))
         .first()
     )
@@ -142,7 +142,7 @@ def get_current_user(
 
     CurrentUser = namedtuple(
         "CurrentUser",
-        "id name email is_active",
+        "id name email is_active verify_user",
     )
 
     user_dict = CurrentUser._make(user)._asdict()
@@ -152,6 +152,7 @@ def get_current_user(
         "name": user_dict["name"],
         "email": user_dict["email"],
         "is_active": user_dict["is_active"],
+        "verify_user": user_dict["verify_user"],
     }
 
 

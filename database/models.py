@@ -27,6 +27,8 @@ class User(Base):
     otp_generation_timestamp = Column(DateTime)
     is_active = Column(Boolean, default=True)
     date_created = Column(Date, default=date.today)
+    verify_user = Column(Boolean, default=False)
+    verification_email_resend_count = Column(Integer, default=0)
 
     def __repr__(self) -> str:
         return f"User({self.email})"

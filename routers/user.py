@@ -19,6 +19,7 @@ from database.models import Listing
 from database.models import ListingImage
 from database.models import User
 from helpers.token_verification import verify_id_from_token
+from helpers.uuid_validator import uuid_validator
 from routers.listings import delete_selected_listing
 
 
@@ -26,6 +27,8 @@ class UserBase(BaseModel):
     id: Optional[UUID]
     name: str
     email: str
+    verification_email_resend_count: Optional[int]
+    verify_user: Optional[bool]
 
     class Config:
         orm_mode = True
@@ -141,6 +144,34 @@ def delete_selected_user(user_id: str, db: Session):
     db.commit()
 
     return "User deleted"
+
+
+def user_from_id(id: str, db: Session):
+    return db.query(User).filter(User.id == id).first()
+
+
+def verification_status(id: str, db: Session):
+    record = db.query(User).filter(User.id == id).update({User.verify_user: True})
+
+    db.commit()
+
+    return record
+
+
+def email_send_count(id: str, db: Session):
+    record = (
+        db.query(User.verification_email_resend_count).filter(User.id == id).first()
+    )
+
+    count = (
+        db.query(User)
+        .filter(User.id == id)
+        .update({User.verification_email_resend_count: int(record[0]) + 1})
+    )
+
+    db.commit()
+
+    return count
 
 
 @router.post("/user", status_code=status.HTTP_201_CREATED)
@@ -284,4 +315,52 @@ def delete_user(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Could not delete user",
+        )
+
+
+@router.get("/user/verify/{id}", status_code=status.HTTP_200_OK)
+async def verify_if_user_exists(id: str, db: Session = Depends(get_db)):
+    try:
+        valid_uuid = uuid_validator(id)
+
+        if valid_uuid:
+            return bool(user_from_id(id, db))
+        else:
+            return False
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not fetch user",
+        )
+
+
+@router.put("/user/verify/{id}", status_code=status.HTTP_201_CREATED)
+async def update_verification_status(id: str, db: Session = Depends(get_db)):
+    try:
+        valid_uuid = uuid_validator(id)
+
+        if valid_uuid:
+            return verification_status(id, db)
+        else:
+            return False
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not update user verification status",
+        )
+
+
+@router.put("/user/email_count/{id}", status_code=status.HTTP_201_CREATED)
+async def update_email_send_count(id: str, db: Session = Depends(get_db)):
+    try:
+        valid_uuid = uuid_validator(id)
+
+        if valid_uuid:
+            return email_send_count(id, db)
+        else:
+            return False
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not update email send count",
         )
